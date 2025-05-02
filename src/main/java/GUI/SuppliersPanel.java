@@ -49,7 +49,7 @@ public class SuppliersPanel extends JPanel {
     private void loadSuppliersFromDatabase() {
         tableModel.setRowCount(0); // Clear existing rows
         try (
-                Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306", "root", "k4lmqXr4x0303");
+                Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/inventory_management", "root", "d");
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT s.supplier_id, s.supplier_name, c.contact_info " + "FROM Supplier s JOIN Supplies_contact_info c ON s.supplier_id = c.supplier_id")
         ) {
