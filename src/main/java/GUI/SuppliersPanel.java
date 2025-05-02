@@ -3,14 +3,16 @@ package GUI;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 
 public class SuppliersPanel extends JPanel {
     private JTable supplierTable;
     private DefaultTableModel tableModel;
     private JButton addButton, deleteButton;
-
-    private Connection conn;
 
     public SuppliersPanel() {
         setLayout(new BorderLayout());
@@ -40,31 +42,17 @@ public class SuppliersPanel extends JPanel {
         addButton.addActionListener(e -> showAddSupplierDialog());
         deleteButton.addActionListener(e -> deleteSelectedSupplier());
 
-        connectToDatabase();
         loadSuppliers();
     }
 
-    private void connectToDatabase() {
-        try {
-            conn = DriverManager.getConnection(
-                    "jdbc:mariadb://localhost:3306/inventory_management",
-                    "root",
-                    "example"
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database connection failed.");
-        }
-    }
-
+    //Loading Suppliers data into tableModel
     private void loadSuppliers() {
         tableModel.setRowCount(0);
         try {
-            String query = "SELECT S.Supplier_ID, S.Supplier_Name, C.Contact_Info " +
-                    "FROM Supplier S " +
-                    "JOIN Supplier_contact_info C ON S.Supplier_ID = C.Supplier_ID";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            ResultSet rs = stmt.executeQuery();
+            Connection db = InventoryDB.getConnection();
+            String query = "SELECT Supplier_ID, Supplier_Name, Contact_Info FROM Supplier";
+            PreparedStatement st = db.prepareStatement(query);
+            ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
@@ -75,19 +63,20 @@ public class SuppliersPanel extends JPanel {
             }
 
             rs.close();
-            stmt.close();
+            st.close();
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Failed to load suppliers.");
         }
     }
 
+    //Adding dialog window
     private void showAddSupplierDialog() {
         JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         JTextField contactField = new JTextField();
-
         JPanel panel = new JPanel(new GridLayout(0, 1));
+
         panel.add(new JLabel("Supplier ID:"));
         panel.add(idField);
         panel.add(new JLabel("Supplier Name:"));
@@ -104,30 +93,26 @@ public class SuppliersPanel extends JPanel {
                 String supplierName = nameField.getText().trim();
                 String contactInfo = contactField.getText().trim();
 
+                Connection db = InventoryDB.getConnection();
+
                 // Insert into Supplier
-                String insertSupplier = "INSERT INTO Supplier (Supplier_ID, Supplier_Name) VALUES (?, ?)";
-                PreparedStatement stmt1 = conn.prepareStatement(insertSupplier);
+                String insertSupplier = "INSERT INTO Supplier (Supplier_ID, Supplier_Name, contact_info) VALUES (?,?,?);";
+                PreparedStatement stmt1 = db.prepareStatement(insertSupplier);
                 stmt1.setInt(1, supplierID);
                 stmt1.setString(2, supplierName);
+                stmt1.setString(3, contactInfo);
                 stmt1.executeUpdate();
                 stmt1.close();
-
-                // Insert into Supplier_contact_info
-                String insertContact = "INSERT INTO Supplier_contact_info (Supplier_ID, Contact_Info) VALUES (?, ?)";
-                PreparedStatement stmt2 = conn.prepareStatement(insertContact);
-                stmt2.setInt(1, supplierID);
-                stmt2.setString(2, contactInfo);
-                stmt2.executeUpdate();
-                stmt2.close();
 
                 loadSuppliers();
             } catch (SQLException | NumberFormatException e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Failed to add supplier. Make sure ID is unique and valid.");
+                JOptionPane.showMessageDialog(this, e.getMessage());
             }
         }
     }
 
+    //Delete on selection
     private void deleteSelectedSupplier() {
         int selectedRow = supplierTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -143,23 +128,13 @@ public class SuppliersPanel extends JPanel {
         int supplierID = (int) tableModel.getValueAt(selectedRow, 0);
 
         try {
-            // Delete from Supplies (foreign key constraint likely exists)
-            PreparedStatement stmt0 = conn.prepareStatement("DELETE FROM Supplies WHERE Supplier_ID = ?");
-            stmt0.setInt(1, supplierID);
-            stmt0.executeUpdate();
-            stmt0.close();
-
-            // Delete from Supplier_contact_info
-            PreparedStatement stmt1 = conn.prepareStatement("DELETE FROM Supplier_contact_info WHERE Supplier_ID = ?");
-            stmt1.setInt(1, supplierID);
-            stmt1.executeUpdate();
-            stmt1.close();
+            Connection conn = InventoryDB.getConnection();
 
             // Delete from Supplier
-            PreparedStatement stmt2 = conn.prepareStatement("DELETE FROM Supplier WHERE Supplier_ID = ?");
-            stmt2.setInt(1, supplierID);
-            stmt2.executeUpdate();
-            stmt2.close();
+            PreparedStatement stmt = conn.prepareStatement("DELETE FROM Supplier WHERE Supplier_ID = ?");
+            stmt.setInt(1, supplierID);
+            stmt.executeUpdate();
+            stmt.close();
 
             loadSuppliers();
         } catch (SQLException e) {

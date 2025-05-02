@@ -26,8 +26,6 @@ public class base extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setTitle("Home");
-                Homescreen home = new Homescreen();
-                home.run();
             }
         });
 
@@ -35,12 +33,6 @@ public class base extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setTitle("Items");
-//                ItemsPanel itemsPanel = new ItemsPanel();
-//                EastPanel.removeAll();
-//                EastPanel.setLayout(new BorderLayout());
-//                EastPanel.add(itemsPanel, BorderLayout.CENTER);
-//                EastPanel.revalidate();
-//                EastPanel.repaint();
             }
         });
 
@@ -48,12 +40,6 @@ public class base extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setTitle("Orders");
-                OrdersListPanel ordersListPanel = new OrdersListPanel();
-                ordersListPanel.run();
-//                EastPanel.removeAll();
-//                EastPanel.add(OrdersListPanel());
-//                EastPanel.revalidate();
-//                EastPanel.repaint();
             }
         });
 
@@ -82,7 +68,5 @@ public class base extends JFrame {
                 EastPanel.repaint();
             }
         });
-
-
     }
 }

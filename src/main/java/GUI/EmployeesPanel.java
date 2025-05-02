@@ -8,7 +8,7 @@ public class EmployeesPanel extends JPanel {
     private JTable employeeTable;
     private DefaultTableModel tableModel;
     private JButton addButton, deleteButton;
-    private int idCounter = 1000; // Auto-incrementing ID starting at 1000
+    private int idCounter = 1000;
 
     public EmployeesPanel() {
         setLayout(new BorderLayout());

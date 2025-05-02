@@ -1,4 +1,4 @@
-import GUI.base;
+package GUI;
 
 public class run {
     public static void main(String[] args) {
