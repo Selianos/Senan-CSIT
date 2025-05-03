@@ -33,6 +33,12 @@ public class base extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setTitle("Items");
+                ItemsPanel itemsPanel = new ItemsPanel();
+                EastPanel.removeAll();
+                EastPanel.setLayout(new BorderLayout());
+                EastPanel.add(itemsPanel, BorderLayout.CENTER);
+                EastPanel.revalidate();
+                EastPanel.repaint();
             }
         });
 
@@ -40,6 +46,11 @@ public class base extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setTitle("Orders");
+                EastPanel.removeAll();
+                EastPanel.setLayout(new BorderLayout());
+                //EastPanel.add(orders, BorderLayout.CENTER);
+                EastPanel.revalidate();
+                EastPanel.repaint();
             }
         });
 
