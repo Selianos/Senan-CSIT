@@ -1,9 +1,13 @@
 package GUI;
 
+import models.Employee;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class base extends JFrame {
+
+    static Employee  emp  ;
 
     //------------------Create Components------------------
     JPanel mainView = new JPanel(new BorderLayout());
@@ -15,7 +19,9 @@ public class base extends JFrame {
     JButton employeesButton = new JButton("Employees");
     JButton suppliersButton = new JButton("Suppliers");
     //------------------------------------------------------
-    public base() {
+    public base(Employee emp) {
+
+        this.emp = emp ;
 
         //------------------Components Configs------------------
         // Base config
@@ -58,6 +64,9 @@ public class base extends JFrame {
         // Bottom glue
         sidebar.add(Box.createVerticalGlue());
 
+        JButton logoutButton = new JButton("Logout");
+        addSidebarButton(logoutButton);
+
         // Footer
         JLabel footerLabel = new JLabel("Account", SwingConstants.CENTER);
         footerLabel.setForeground(Color.LIGHT_GRAY);
@@ -84,6 +93,7 @@ public class base extends JFrame {
         ordersButton.addActionListener(e -> listener.orders());
         employeesButton.addActionListener(e -> listener.employees());
         suppliersButton.addActionListener(e -> listener.suppliers());
+        logoutButton.addActionListener(e -> {dispose(); new LoginFrame();});emp = null ;
     }
     //------------------------------------------------------------------------
     private void addSidebarButton(JButton button) {
@@ -130,9 +140,7 @@ public class base extends JFrame {
             g2.dispose();
         }
     }
-
-    //------------------------------------RUN------------------------------------
-    public static void main(String[] args) {
-        new base();
+    public static Employee getSessionEmp(){
+        return emp ;
     }
 }

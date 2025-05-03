@@ -23,8 +23,21 @@ public class ListenerEvent {
     }
 
     public void orders() {
-        frame.setTitle("Orders");
-        setContentPanel(new JPanel());
+        try {
+            if (base.getSessionEmp().isAdmin()) {
+                frame.setTitle("Orders");
+                setContentPanel(new OrdersPanel());
+            }
+        } catch (NullPointerException e) {
+        }
+
+        try {
+            if (Staffbase.getSessionEmp().isStaff()) {
+                frame.setTitle("Orders");
+                setContentPanel(new StaffOrdersPanel());
+            }
+        } catch (NullPointerException e) {
+        }
     }
 
     public void employees() {

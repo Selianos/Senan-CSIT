@@ -6,6 +6,6 @@ import java.sql.SQLException;
 
 public class InventoryDB {
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:mariadb://localhost:3306/inventory_management", "root", "a");
+        return DriverManager.getConnection("jdbc:mariadb://localhost:3306/inventory_management", "root", "k4lmqXr4x0303");
     }
 }
