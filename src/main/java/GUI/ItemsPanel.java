@@ -4,31 +4,26 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Vector;
 
 public class ItemsPanel extends JPanel {
     private JTable itemTable;
     private DefaultTableModel tableModel;
     private JButton addButton, deleteButton;
-    private int idCounter = 1000;
 
     public ItemsPanel() {
         setLayout(new BorderLayout());
 
         String[] columns = {
-                "ID", "Name", "Item QR Code", "Manufacturer", "Category",
-                "Quantity", "Min Stock Level", "Unit Price", "Total Value",
-                "Last Updated Date", "Supplier"
+                "item_id", "item_name", "item_qr", "manufacturer",
+                "category", "stock_quantity", "min_stock_level", "unit_price"
         };
 
         tableModel = new DefaultTableModel(columns, 0) {
-            @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+
         itemTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(itemTable);
 
@@ -42,141 +37,130 @@ public class ItemsPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
 
         addButton.addActionListener(e -> showAddItemDialog());
-        deleteButton.addActionListener(e -> handleDelete());
+        deleteButton.addActionListener(e -> deleteSelectedItem());
+
+        loadItems();
+    }
+
+    private void loadItems() {
+        tableModel.setRowCount(0);
+        try {
+            Connection db = InventoryDB.getConnection();
+            String query = "SELECT item_id, item_name, item_qr, manufacturer, category, stock_quantity, min_stock_level, unit_price FROM Item";
+            PreparedStatement st = db.prepareStatement(query);
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                tableModel.addRow(new Object[]{
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getString("item_qr"),
+                        rs.getString("manufacturer"),
+                        rs.getString("category"),
+                        rs.getInt("stock_quantity"),
+                        rs.getInt("min_stock_level"),
+                        rs.getDouble("unit_price")
+                });
+            }
+
+            rs.close();
+            st.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to load items.");
+        }
     }
 
     private void showAddItemDialog() {
-        // Fetch suppliers from the database
-        Vector<String> supplierList = getSupplierNamesFromDatabase();
-        if (supplierList.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No suppliers available. Please add suppliers first.", "No Suppliers", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
+        JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         JTextField qrField = new JTextField();
         JTextField manufacturerField = new JTextField();
         JTextField categoryField = new JTextField();
-        JTextField quantityField = new JTextField();
+        JTextField stockField = new JTextField();
         JTextField minStockField = new JTextField();
-        JTextField unitPriceField = new JTextField();
-        JComboBox<String> supplierComboBox = new JComboBox<>(supplierList);
+        JTextField priceField = new JTextField();
 
-        JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("Name:")); panel.add(nameField);
-        panel.add(new JLabel("QR Code:")); panel.add(qrField);
-        panel.add(new JLabel("Manufacturer:")); panel.add(manufacturerField);
-        panel.add(new JLabel("Category:")); panel.add(categoryField);
-        panel.add(new JLabel("Quantity:")); panel.add(quantityField);
-        panel.add(new JLabel("Min Stock Level:")); panel.add(minStockField);
-        panel.add(new JLabel("Unit Price:")); panel.add(unitPriceField);
-        panel.add(new JLabel("Supplier:")); panel.add(supplierComboBox);
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Item ID:"));
+        panel.add(idField);
+        panel.add(new JLabel("Item Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Item QR:"));
+        panel.add(qrField);
+        panel.add(new JLabel("Manufacturer:"));
+        panel.add(manufacturerField);
+        panel.add(new JLabel("Category:"));
+        panel.add(categoryField);
+        panel.add(new JLabel("Stock Quantity:"));
+        panel.add(stockField);
+        panel.add(new JLabel("Min Stock Level:"));
+        panel.add(minStockField);
+        panel.add(new JLabel("Unit Price:"));
+        panel.add(priceField);
 
-        int result = JOptionPane.showConfirmDialog(
-                this, panel, "Add New Item",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
-        );
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add Item",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                String name = nameField.getText().trim();
-                String qr = qrField.getText().trim();
+                int itemId = Integer.parseInt(idField.getText());
+                String itemName = nameField.getText().trim();
+                String itemQr = qrField.getText().trim();
                 String manufacturer = manufacturerField.getText().trim();
                 String category = categoryField.getText().trim();
-                int quantity = Integer.parseInt(quantityField.getText().trim());
-                int minStock = Integer.parseInt(minStockField.getText().trim());
-                double unitPrice = Double.parseDouble(unitPriceField.getText().trim());
-                String supplier = (String) supplierComboBox.getSelectedItem();
+                int stockQty = Integer.parseInt(stockField.getText());
+                int minStock = Integer.parseInt(minStockField.getText());
+                double unitPrice = Double.parseDouble(priceField.getText());
 
-                double totalValue = unitPrice * quantity;
-                String lastUpdated = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                Connection db = InventoryDB.getConnection();
+                String insertItem = "INSERT INTO Item (item_id, item_name, item_qr, manufacturer, category, stock_quantity, min_stock_level, unit_price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement stmt = db.prepareStatement(insertItem);
+                stmt.setInt(1, itemId);
+                stmt.setString(2, itemName);
+                stmt.setString(3, itemQr);
+                stmt.setString(4, manufacturer);
+                stmt.setString(5, category);
+                stmt.setInt(6, stockQty);
+                stmt.setInt(7, minStock);
+                stmt.setDouble(8, unitPrice);
+                stmt.executeUpdate();
+                stmt.close();
 
-                // Insert item into the database
-                insertItemIntoDatabase(name, qr, manufacturer, category, quantity, minStock, unitPrice, totalValue, lastUpdated, supplier);
-
-                // After inserting, update the table
-                tableModel.addRow(new Object[]{
-                        idCounter++, name, qr, manufacturer, category,
-                        quantity, minStock, unitPrice, totalValue, lastUpdated, supplier
-                });
-
-            } catch (NumberFormatException | SQLException ex) {
-                JOptionPane.showMessageDialog(this,
-                        "Please enter valid numbers for quantity, stock level, and price.",
-                        "Input Error", JOptionPane.ERROR_MESSAGE);
+                loadItems();
+            } catch (SQLException | NumberFormatException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, e.getMessage());
             }
         }
     }
 
-    private Vector<String> getSupplierNamesFromDatabase() {
-        Vector<String> names = new Vector<>();
-
-        try (Connection conn = InventoryDB.getConnection()) {
-            String query = "SELECT Supplier_Name FROM Supplier";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                names.add(rs.getString("Supplier_Name"));
-            }
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to load suppliers from the database.");
+    private void deleteSelectedItem() {
+        int selectedRow = itemTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item to delete.");
+            return;
         }
 
-        return names;
-    }
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this item?",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
 
-    private void insertItemIntoDatabase(String name, String qr, String manufacturer, String category, int quantity, int minStock, double unitPrice, double totalValue, String lastUpdated, String supplier) throws SQLException {
-        try (Connection conn = InventoryDB.getConnection()) {
-            // Get the supplier ID based on the supplier name selected from the dropdown
-            String supplierQuery = "SELECT Supplier_ID FROM Supplier WHERE Supplier_Name = ?";
-            PreparedStatement supplierStmt = conn.prepareStatement(supplierQuery);
-            supplierStmt.setString(1, supplier);
-            ResultSet rs = supplierStmt.executeQuery();
+        if (confirm != JOptionPane.YES_OPTION) return;
 
-            int supplierID = -1;
-            if (rs.next()) {
-                supplierID = rs.getInt("Supplier_ID");
-            }
-            rs.close();
-            supplierStmt.close();
+        int itemId = (int) tableModel.getValueAt(selectedRow, 0);
 
-            // Insert item into the Item table
-            String insertItem = "INSERT INTO Item (item_name, item_qr_code, manufacturer, category, stock_quantity, min_stock_level, unit_price, total_value, last_updated, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(insertItem);
-            stmt.setString(1, name);
-            stmt.setString(2, qr);
-            stmt.setString(3, manufacturer);
-            stmt.setString(4, category);
-            stmt.setInt(5, quantity);
-            stmt.setInt(6, minStock);
-            stmt.setDouble(7, unitPrice);
-            stmt.setDouble(8, totalValue);
-            stmt.setString(9, lastUpdated);
-            stmt.setInt(10, supplierID);
+        try {
+            Connection db = InventoryDB.getConnection();
+            PreparedStatement stmt = db.prepareStatement("DELETE FROM Item WHERE item_id = ?");
+            stmt.setInt(1, itemId);
             stmt.executeUpdate();
             stmt.close();
-        }
-    }
 
-    private void handleDelete() {
-        int selectedRow = itemTable.getSelectedRow();
-        if (selectedRow != -1) {
-            String itemName = tableModel.getValueAt(selectedRow, 1).toString();
-            int confirm = JOptionPane.showConfirmDialog(
-                    this,
-                    "Are you sure you want to delete \"" + itemName + "\"?",
-                    "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION
-            );
-            if (confirm == JOptionPane.YES_OPTION) {
-                tableModel.removeRow(selectedRow);
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Please select an item to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
+            loadItems();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to delete item.");
         }
     }
 }
