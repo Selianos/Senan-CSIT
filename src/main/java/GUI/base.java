@@ -2,82 +2,129 @@ package GUI;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class base extends JFrame {
-    private JPanel base;
-    private JButton homeButton;
-    private JButton itemsButton;
-    private JButton employeesButton;
-    private JButton suppliersButton;
-    private JButton ordersButton;
-    private JPanel westPanel;
-    private JPanel EastPanel;
+    JPanel mainView = new JPanel(new BorderLayout());
+    JPanel sidebar = new JPanel();
+    JLabel titleLabel = new JLabel("SenanDB", SwingConstants.CENTER);
+    JButton homeButton = new JButton("Home");
+    JButton itemsButton = new JButton("Items");
+    JButton ordersButton = new JButton("Orders");
+    JButton employeesButton = new JButton("Employees");
+    JButton suppliersButton = new JButton("Suppliers");
 
     public base() {
-        setContentPane(base);
+        // Base config
         setTitle("Home");
-        setSize(800, 600);
-        setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
+        JPanel base = new JPanel(new BorderLayout());
 
-        homeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setTitle("Home");
-            }
-        });
+        // Sidebar config
+        sidebar.setPreferredSize(new Dimension(220, getHeight()));
+        sidebar.setBackground(new Color(20, 20, 40));
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
 
-        itemsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setTitle("Items");
-                ItemsPanel itemsPanel = new ItemsPanel();
-                EastPanel.removeAll();
-                EastPanel.setLayout(new BorderLayout());
-                EastPanel.add(itemsPanel, BorderLayout.CENTER);
-                EastPanel.revalidate();
-                EastPanel.repaint();
-            }
-        });
+        // Title config
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+        sidebar.add(titleLabel);
 
-        ordersButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setTitle("Orders");
-                EastPanel.removeAll();
-                EastPanel.setLayout(new BorderLayout());
-                //EastPanel.add(orders, BorderLayout.CENTER);
-                EastPanel.revalidate();
-                EastPanel.repaint();
-            }
-        });
+        // Top glue
+        sidebar.add(Box.createVerticalGlue());
 
-        employeesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setTitle("Employees");
-                EmployeesPanel employeesPanel = new EmployeesPanel();
-                EastPanel.removeAll();
-                EastPanel.setLayout(new BorderLayout());
-                EastPanel.add(employeesPanel, BorderLayout.CENTER);
-                EastPanel.revalidate();
-                EastPanel.repaint();
-            }
-        });
+        // Add buttons with spacing
+        addSidebarButton(homeButton);
+        sidebar.add(Box.createVerticalGlue());
 
-        suppliersButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setTitle("Suppliers");
-                SuppliersPanel suppliersPanel = new SuppliersPanel();
-                EastPanel.removeAll();
-                EastPanel.setLayout(new BorderLayout());
-                EastPanel.add(suppliersPanel, BorderLayout.CENTER);
-                EastPanel.revalidate();
-                EastPanel.repaint();
+        addSidebarButton(itemsButton);
+        sidebar.add(Box.createVerticalGlue());
+
+        addSidebarButton(ordersButton);
+        sidebar.add(Box.createVerticalGlue());
+
+        addSidebarButton(employeesButton);
+        sidebar.add(Box.createVerticalGlue());
+
+        addSidebarButton(suppliersButton);
+
+        // Bottom glue
+        sidebar.add(Box.createVerticalGlue());
+
+        // Footer
+        JLabel footerLabel = new JLabel("Account", SwingConstants.CENTER);
+        footerLabel.setForeground(Color.LIGHT_GRAY);
+        footerLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        footerLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(footerLabel);
+
+        // Main content area
+        mainView.setBackground(Color.WHITE);
+
+        base.add(sidebar, BorderLayout.WEST);
+        base.add(mainView, BorderLayout.CENTER);
+        setContentPane(base);
+        setVisible(true);
+
+        // Listener
+        ListenerEvent listener = new ListenerEvent(this, mainView);
+        homeButton.addActionListener(e -> listener.home());
+        itemsButton.addActionListener(e -> listener.items());
+        ordersButton.addActionListener(e -> listener.orders());
+        employeesButton.addActionListener(e -> listener.employees());
+        suppliersButton.addActionListener(e -> listener.suppliers());
+    }
+
+    private void addSidebarButton(JButton button) {
+        button.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        button.setBackground(new Color(60, 60, 60));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setUI(new RoundedButtonUI());
+        sidebar.add(button);
+    }
+
+    // Rounded UI
+    static class RoundedButtonUI extends javax.swing.plaf.basic.BasicButtonUI {
+        @Override
+        public void installUI(JComponent c) {
+            super.installUI(c);
+            c.setOpaque(false);
+            c.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        }
+
+        @Override
+        public void paint(Graphics g, JComponent c) {
+            AbstractButton b = (AbstractButton) c;
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            if (b.getModel().isArmed()) {
+                g2.setColor(new Color(90, 90, 90));
+            } else {
+                g2.setColor(b.getBackground());
             }
-        });
+
+            g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 20, 20);
+
+            FontMetrics fm = g.getFontMetrics();
+            Rectangle r = new Rectangle(c.getSize());
+            int textWidth = fm.stringWidth(b.getText());
+            int textHeight = fm.getAscent();
+            g2.setColor(b.getForeground());
+            g2.drawString(b.getText(), (r.width - textWidth) / 2, (r.height + textHeight) / 2 - 3);
+
+            g2.dispose();
+        }
+    }
+
+    public static void main(String[] args) {
+        new base();
     }
 }
