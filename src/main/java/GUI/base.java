@@ -15,8 +15,6 @@ public class base extends JFrame {
     JButton employeesButton = new JButton("Employees");
     JButton suppliersButton = new JButton("Suppliers");
     //------------------------------------------------------
-
-
     public base() {
 
         //------------------Components Configs------------------
