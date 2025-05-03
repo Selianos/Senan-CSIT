@@ -14,19 +14,7 @@ public class ListenerEvent {
 
     public void home() {
         frame.setTitle("Home");
-        JLabel welcomeLabel = new JLabel("Welcome to SenanDB", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
-        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
-
-        JPanel homePanel = new JPanel();
-        homePanel.setLayout(new BoxLayout(homePanel, BoxLayout.Y_AXIS));
-        homePanel.setBackground(Color.WHITE);
-        homePanel.add(Box.createVerticalGlue());
-        homePanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        homePanel.add(welcomeLabel);
-        homePanel.add(Box.createVerticalGlue());
-
-        setContentPanel(homePanel);
+        setContentPanel(new HomePanel());
     }
 
     public void items() {
@@ -36,7 +24,7 @@ public class ListenerEvent {
 
     public void orders() {
         frame.setTitle("Orders");
-        setContentPanel(new JPanel()); // Replace with actual OrdersPanel when implemented
+        setContentPanel(new JPanel());
     }
 
     public void employees() {

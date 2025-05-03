@@ -72,13 +72,10 @@ public class SuppliersPanel extends JPanel {
 
     //Adding dialog window
     private void showAddSupplierDialog() {
-        JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         JTextField contactField = new JTextField();
         JPanel panel = new JPanel(new GridLayout(0, 1));
 
-        panel.add(new JLabel("Supplier ID:"));
-        panel.add(idField);
         panel.add(new JLabel("Supplier Name:"));
         panel.add(nameField);
         panel.add(new JLabel("Supplier Contact Info:"));
@@ -89,18 +86,16 @@ public class SuppliersPanel extends JPanel {
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                int supplierID = Integer.parseInt(idField.getText());
                 String supplierName = nameField.getText().trim();
                 String contactInfo = contactField.getText().trim();
 
                 Connection db = InventoryDB.getConnection();
 
                 // Insert into Supplier
-                String insertSupplier = "INSERT INTO Supplier (Supplier_ID, Supplier_Name, contact_info) VALUES (?,?,?);";
+                String insertSupplier = "INSERT INTO Supplier (Supplier_Name, contact_info) VALUES (?,?);";
                 PreparedStatement stmt1 = db.prepareStatement(insertSupplier);
-                stmt1.setInt(1, supplierID);
-                stmt1.setString(2, supplierName);
-                stmt1.setString(3, contactInfo);
+                stmt1.setString(1, supplierName);
+                stmt1.setString(2, contactInfo);
                 stmt1.executeUpdate();
                 stmt1.close();
 
