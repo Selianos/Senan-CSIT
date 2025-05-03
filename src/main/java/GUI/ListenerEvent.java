@@ -36,7 +36,7 @@ public class ListenerEvent {
 
     public void orders() {
         frame.setTitle("Orders");
-        setContentPanel(new JPanel()); // Replace with actual OrdersPanel when implemented
+        setContentPanel(new OrdersPanel()); // ✅ Load actual OrdersPanel
     }
 
     public void employees() {
