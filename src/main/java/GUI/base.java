@@ -71,6 +71,9 @@ public class base extends JFrame {
         // Main content area
         mainView.setBackground(Color.WHITE);
 
+        //welcome screen
+        HomePanel homePanel = new HomePanel();
+        mainView.add(homePanel, BorderLayout.CENTER);
         base.add(sidebar, BorderLayout.WEST);
         base.add(mainView, BorderLayout.CENTER);
         setContentPane(base);
