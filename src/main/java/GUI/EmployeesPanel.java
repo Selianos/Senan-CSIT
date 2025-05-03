@@ -104,9 +104,9 @@ public class EmployeesPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(employeeTable);
 
         // Buttons
-        addButton = new JButton("Add Employee");
-        deleteButton = new JButton("Delete Employee");
-        editEmployeeButton = new JButton("Edit Employee");
+        addButton = new JButton("Add");
+        deleteButton = new JButton("Delete");
+        editEmployeeButton = new JButton("Update");
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(addButton);
