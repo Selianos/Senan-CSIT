@@ -8,7 +8,7 @@ import java.sql.*;
 public class ItemsPanel extends JPanel {
     private JTable itemTable;
     private DefaultTableModel tableModel;
-    private JButton addButton, deleteButton;
+    private JButton addButton, deleteButton,updateButton;
 
     public ItemsPanel() {
         setLayout(new BorderLayout());
@@ -27,17 +27,21 @@ public class ItemsPanel extends JPanel {
         itemTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(itemTable);
 
-        addButton = new JButton("Add Item");
-        deleteButton = new JButton("Delete Item");
+        addButton = new JButton("Add");
+        deleteButton = new JButton("Delete");
+        updateButton = new JButton("Update");
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(addButton);
         buttonPanel.add(deleteButton);
+        buttonPanel.add(updateButton);
 
         add(scrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
         addButton.addActionListener(e -> showAddItemDialog());
         deleteButton.addActionListener(e -> deleteSelectedItem());
+        updateButton.addActionListener(e->showUpdateItemDialog());
 
         loadItems();
     }
@@ -163,4 +167,79 @@ public class ItemsPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Failed to delete item.");
         }
     }
+    private void showUpdateItemDialog() {
+        int selectedRow = itemTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item to update.");
+            return;
+        }
+
+        int itemId = (int) tableModel.getValueAt(selectedRow, 0);
+        String itemName = (String) tableModel.getValueAt(selectedRow, 1);
+        String itemQr = (String) tableModel.getValueAt(selectedRow, 2);
+        String manufacturer = (String) tableModel.getValueAt(selectedRow, 3);
+        String category = (String) tableModel.getValueAt(selectedRow, 4);
+        int stockQty = (int) tableModel.getValueAt(selectedRow, 5);
+        int minStock = (int) tableModel.getValueAt(selectedRow, 6);
+        double unitPrice = (double) tableModel.getValueAt(selectedRow, 7);
+
+        JTextField nameField = new JTextField(itemName);
+        JTextField qrField = new JTextField(itemQr);
+        JTextField manufacturerField = new JTextField(manufacturer);
+        JTextField categoryField = new JTextField(category);
+        JTextField stockField = new JTextField(String.valueOf(stockQty));
+        JTextField minStockField = new JTextField(String.valueOf(minStock));
+        JTextField priceField = new JTextField(String.valueOf(unitPrice));
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Item Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Item QR:"));
+        panel.add(qrField);
+        panel.add(new JLabel("Manufacturer:"));
+        panel.add(manufacturerField);
+        panel.add(new JLabel("Category:"));
+        panel.add(categoryField);
+        panel.add(new JLabel("Stock Quantity:"));
+        panel.add(stockField);
+        panel.add(new JLabel("Min Stock Level:"));
+        panel.add(minStockField);
+        panel.add(new JLabel("Unit Price:"));
+        panel.add(priceField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Update Item",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String newName = nameField.getText().trim();
+                String newQr = qrField.getText().trim();
+                String newManufacturer = manufacturerField.getText().trim();
+                String newCategory = categoryField.getText().trim();
+                int newStock = Integer.parseInt(stockField.getText().trim());
+                int newMinStock = Integer.parseInt(minStockField.getText().trim());
+                double newPrice = Double.parseDouble(priceField.getText().trim());
+
+                Connection db = InventoryDB.getConnection();
+                String updateQuery = "UPDATE Item SET item_name = ?, item_qr = ?, manufacturer = ?, category = ?, stock_quantity = ?, min_stock_level = ?, unit_price = ? WHERE item_id = ?";
+                PreparedStatement stmt = db.prepareStatement(updateQuery);
+                stmt.setString(1, newName);
+                stmt.setString(2, newQr);
+                stmt.setString(3, newManufacturer);
+                stmt.setString(4, newCategory);
+                stmt.setInt(5, newStock);
+                stmt.setInt(6, newMinStock);
+                stmt.setDouble(7, newPrice);
+                stmt.setInt(8, itemId);
+                stmt.executeUpdate();
+                stmt.close();
+
+                loadItems();
+            } catch (SQLException | NumberFormatException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Failed to update item: " + e.getMessage());
+            }
+        }
+    }
+
 }

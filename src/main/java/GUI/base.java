@@ -15,8 +15,6 @@ public class base extends JFrame {
     JButton employeesButton = new JButton("Employees");
     JButton suppliersButton = new JButton("Suppliers");
     //------------------------------------------------------
-
-
     public base() {
 
         //------------------Components Configs------------------
@@ -71,6 +69,9 @@ public class base extends JFrame {
         // Main content area
         mainView.setBackground(Color.WHITE);
 
+        //welcome screen
+        HomePanel homePanel = new HomePanel();
+        mainView.add(homePanel, BorderLayout.CENTER);
         base.add(sidebar, BorderLayout.WEST);
         base.add(mainView, BorderLayout.CENTER);
         setContentPane(base);
