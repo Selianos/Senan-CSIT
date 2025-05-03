@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class base extends JFrame {
+
+    //------------------Create Components------------------
     JPanel mainView = new JPanel(new BorderLayout());
     JPanel sidebar = new JPanel();
     JLabel titleLabel = new JLabel("SenanDB", SwingConstants.CENTER);
@@ -12,8 +14,12 @@ public class base extends JFrame {
     JButton ordersButton = new JButton("Orders");
     JButton employeesButton = new JButton("Employees");
     JButton suppliersButton = new JButton("Suppliers");
+    //------------------------------------------------------
+
 
     public base() {
+
+        //------------------Components Configs------------------
         // Base config
         setTitle("Home");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,7 +76,7 @@ public class base extends JFrame {
         setContentPane(base);
         setVisible(true);
 
-        // Listener
+        //------------------------Listeners-------------------------
         ListenerEvent listener = new ListenerEvent(this, mainView);
         homeButton.addActionListener(e -> listener.home());
         itemsButton.addActionListener(e -> listener.items());
@@ -78,7 +84,7 @@ public class base extends JFrame {
         employeesButton.addActionListener(e -> listener.employees());
         suppliersButton.addActionListener(e -> listener.suppliers());
     }
-
+    //------------------------------------------------------------------------
     private void addSidebarButton(JButton button) {
         button.setFont(new Font("SansSerif", Font.PLAIN, 15));
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
@@ -90,7 +96,7 @@ public class base extends JFrame {
         sidebar.add(button);
     }
 
-    // Rounded UI
+    // ------------------------------------Rounded UI design------------------------------------
     static class RoundedButtonUI extends javax.swing.plaf.basic.BasicButtonUI {
         @Override
         public void installUI(JComponent c) {
@@ -124,6 +130,7 @@ public class base extends JFrame {
         }
     }
 
+    //------------------------------------RUN------------------------------------
     public static void main(String[] args) {
         new base();
     }
