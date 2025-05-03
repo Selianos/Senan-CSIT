@@ -91,8 +91,8 @@ public class EmployeesPanel extends JPanel {
                     throw new NumberFormatException("Share must be between 0 and 100.");
                 }
 
-                try (Connection conn = DatabaseHelper.getConnection();
-                     PreparedStatement pstmt = conn.prepareStatement(
+                try ( Connection db = InventoryDB.getConnection();
+                     PreparedStatement pstmt = db.prepareStatement(
                              "INSERT INTO Employee (Username, Password, First_name, Middle_name, Last_name, Role, Share) VALUES (?, ?, ?, ?, ?, ?, ?)",
                              Statement.RETURN_GENERATED_KEYS)) {
 
@@ -123,8 +123,8 @@ public class EmployeesPanel extends JPanel {
     }
     // ✅ FIXED: Moved method outside constructor
     private void loadEmployees() {
-        try (Connection conn = DatabaseHelper.getConnection();
-             Statement stmt = conn.createStatement();
+        try ( Connection db = InventoryDB.getConnection();
+             Statement stmt = db.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM Employee")) {
 
             while (rs.next()) {
@@ -158,8 +158,8 @@ public class EmployeesPanel extends JPanel {
             );
 
             if (confirm == JOptionPane.YES_OPTION) {
-                try (Connection conn = DatabaseHelper.getConnection();
-                     PreparedStatement pstmt = conn.prepareStatement("DELETE FROM Employee WHERE EMP_ID = ?")) {
+                try ( Connection db = InventoryDB.getConnection();
+                     PreparedStatement pstmt = db.prepareStatement("DELETE FROM Employee WHERE EMP_ID = ?")) {
                     pstmt.setInt(1, empId);
                     pstmt.executeUpdate();
 
