@@ -54,15 +54,17 @@ public class SuppliersPanel extends JPanel {
         tableModel.setRowCount(0);
         try {
             Connection db = InventoryDB.getConnection();
-            String query = "SELECT Supplier_ID, Supplier_Name, Contact_Info FROM Supplier";
+            String query = "SELECT s.supplier_id, s.supplier_name, sc.contact_info " +
+                    "FROM Supplier s " +
+                    "JOIN Supplier_contact_info sc ON s.supplier_id = sc.supplier_id";
             PreparedStatement st = db.prepareStatement(query);
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
-                        rs.getInt("Supplier_ID"),
-                        rs.getString("Supplier_Name"),
-                        rs.getString("Contact_Info")
+                        rs.getInt("supplier_id"),
+                        rs.getString("supplier_name"),
+                        rs.getString("contact_info")
                 });
             }
 
@@ -73,6 +75,7 @@ public class SuppliersPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Failed to load suppliers.");
         }
     }
+
 
     //Adding supplier window
     private void showAddSupplierDialog() {
@@ -96,20 +99,36 @@ public class SuppliersPanel extends JPanel {
                 Connection db = InventoryDB.getConnection();
 
                 // Insert into Supplier
-                String insertSupplier = "INSERT INTO Supplier (Supplier_Name, contact_info) VALUES (?,?);";
-                PreparedStatement stmt1 = db.prepareStatement(insertSupplier);
+                String insertSupplier = "INSERT INTO Supplier (supplier_name) VALUES (?)";
+                PreparedStatement stmt1 = db.prepareStatement(insertSupplier, PreparedStatement.RETURN_GENERATED_KEYS);
                 stmt1.setString(1, supplierName);
-                stmt1.setString(2, contactInfo);
                 stmt1.executeUpdate();
+
+                ResultSet generatedKeys = stmt1.getGeneratedKeys();
+                int supplierId = -1;
+                if (generatedKeys.next()) {
+                    supplierId = generatedKeys.getInt(1);
+                }
                 stmt1.close();
 
+                // Insert into Supplier_contact_info
+                if (supplierId != -1) {
+                    String insertContact = "INSERT INTO Supplier_contact_info (supplier_id, contact_info) VALUES (?, ?)";
+                    PreparedStatement stmt2 = db.prepareStatement(insertContact);
+                    stmt2.setInt(1, supplierId);
+                    stmt2.setString(2, contactInfo);
+                    stmt2.executeUpdate();
+                    stmt2.close();
+                }
+
                 loadSuppliers();
-            } catch (SQLException | NumberFormatException e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(this, e.getMessage());
             }
         }
     }
+
 
     //Delete on selection
     private void deleteSelectedSupplier() {
@@ -173,13 +192,21 @@ public class SuppliersPanel extends JPanel {
 
                 Connection db = InventoryDB.getConnection();
 
-                String updateSQL = "UPDATE Supplier SET Supplier_Name = ?, Contact_Info = ? WHERE Supplier_ID = ?";
-                PreparedStatement stmt = db.prepareStatement(updateSQL);
-                stmt.setString(1, newName);
-                stmt.setString(2, newContact);
-                stmt.setInt(3, supplierID);
-                stmt.executeUpdate();
-                stmt.close();
+                // Update Supplier name
+                String updateSupplierSQL = "UPDATE Supplier SET Supplier_Name = ? WHERE Supplier_ID = ?";
+                PreparedStatement stmt1 = db.prepareStatement(updateSupplierSQL);
+                stmt1.setString(1, newName);
+                stmt1.setInt(2, supplierID);
+                stmt1.executeUpdate();
+                stmt1.close();
+
+                // Update Contact Info
+                String updateContactSQL = "UPDATE Supplier_contact_info SET Contact_Info = ? WHERE Supplier_ID = ?";
+                PreparedStatement stmt2 = db.prepareStatement(updateContactSQL);
+                stmt2.setString(1, newContact);
+                stmt2.setInt(2, supplierID);
+                stmt2.executeUpdate();
+                stmt2.close();
 
                 loadSuppliers();
             } catch (SQLException e) {
@@ -188,5 +215,6 @@ public class SuppliersPanel extends JPanel {
             }
         }
     }
+
 }
 
