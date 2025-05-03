@@ -3,6 +3,7 @@ package GUI;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
@@ -45,8 +46,8 @@ public class ItemsPanel extends JPanel {
     }
 
     private void showAddItemDialog() {
-        // Fetch suppliers
-        Vector<String> supplierList = getSupplierNames();
+        // Fetch suppliers from the database
+        Vector<String> supplierList = getSupplierNamesFromDatabase();
         if (supplierList.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No suppliers available. Please add suppliers first.", "No Suppliers", JOptionPane.WARNING_MESSAGE);
             return;
@@ -89,14 +90,17 @@ public class ItemsPanel extends JPanel {
 
                 double totalValue = unitPrice * quantity;
                 String lastUpdated = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                int currentId = idCounter++;
 
+                // Insert item into the database
+                insertItemIntoDatabase(name, qr, manufacturer, category, quantity, minStock, unitPrice, totalValue, lastUpdated, supplier);
+
+                // After inserting, update the table
                 tableModel.addRow(new Object[]{
-                        currentId, name, qr, manufacturer, category,
+                        idCounter++, name, qr, manufacturer, category,
                         quantity, minStock, unitPrice, totalValue, lastUpdated, supplier
                 });
 
-            } catch (NumberFormatException ex) {
+            } catch (NumberFormatException | SQLException ex) {
                 JOptionPane.showMessageDialog(this,
                         "Please enter valid numbers for quantity, stock level, and price.",
                         "Input Error", JOptionPane.ERROR_MESSAGE);
@@ -104,25 +108,58 @@ public class ItemsPanel extends JPanel {
         }
     }
 
-    private Vector<String> getSupplierNames() {
+    private Vector<String> getSupplierNamesFromDatabase() {
         Vector<String> names = new Vector<>();
 
-        for (Frame f : JFrame.getFrames()) {
-            if (f instanceof JFrame) {
-                Component[] components = ((JFrame) f).getContentPane().getComponents();
-                for (Component comp : components) {
-                    if (comp instanceof SuppliersPanel) {
-                        JTable supplierTable = ((SuppliersPanel) comp).getSuppliers();
-                        DefaultTableModel model = (DefaultTableModel) supplierTable.getModel();
-                        for (int i = 0; i < model.getRowCount(); i++) {
-                            names.add((String) model.getValueAt(i, 1));
-                        }
-                    }
-                }
+        try (Connection conn = InventoryDB.getConnection()) {
+            String query = "SELECT Supplier_Name FROM Supplier";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                names.add(rs.getString("Supplier_Name"));
             }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to load suppliers from the database.");
         }
 
         return names;
+    }
+
+    private void insertItemIntoDatabase(String name, String qr, String manufacturer, String category, int quantity, int minStock, double unitPrice, double totalValue, String lastUpdated, String supplier) throws SQLException {
+        try (Connection conn = InventoryDB.getConnection()) {
+            // Get the supplier ID based on the supplier name selected from the dropdown
+            String supplierQuery = "SELECT Supplier_ID FROM Supplier WHERE Supplier_Name = ?";
+            PreparedStatement supplierStmt = conn.prepareStatement(supplierQuery);
+            supplierStmt.setString(1, supplier);
+            ResultSet rs = supplierStmt.executeQuery();
+
+            int supplierID = -1;
+            if (rs.next()) {
+                supplierID = rs.getInt("Supplier_ID");
+            }
+            rs.close();
+            supplierStmt.close();
+
+            // Insert item into the Item table
+            String insertItem = "INSERT INTO Item (item_name, item_qr_code, manufacturer, category, stock_quantity, min_stock_level, unit_price, total_value, last_updated, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(insertItem);
+            stmt.setString(1, name);
+            stmt.setString(2, qr);
+            stmt.setString(3, manufacturer);
+            stmt.setString(4, category);
+            stmt.setInt(5, quantity);
+            stmt.setInt(6, minStock);
+            stmt.setDouble(7, unitPrice);
+            stmt.setDouble(8, totalValue);
+            stmt.setString(9, lastUpdated);
+            stmt.setInt(10, supplierID);
+            stmt.executeUpdate();
+            stmt.close();
+        }
     }
 
     private void handleDelete() {
