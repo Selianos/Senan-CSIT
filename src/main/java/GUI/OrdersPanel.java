@@ -354,7 +354,7 @@ public class OrdersPanel extends JPanel {
                         
  
                         // Insert order detail
-                        String insertDetail = "INSERT INTO order_items (order_id, item_id, quantity) VALUES (?, ?, ?)";
+                        String insertDetail = "INSERT INTO Order_items (order_id, item_id, quantity) VALUES (?, ?, ?)";
                         PreparedStatement detailStmt = db.prepareStatement(insertDetail);
                         detailStmt.setInt(1, orderId);
                         detailStmt.setInt(2, itemId);
