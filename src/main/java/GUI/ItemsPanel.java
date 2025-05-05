@@ -37,12 +37,14 @@ public class ItemsPanel extends JPanel {
         buttonPanel.add(updateButton);
 
         add(scrollPane, BorderLayout.CENTER);
+        
+        
+        if (Staffbase.getSessionEmp() == null){  
         add(buttonPanel, BorderLayout.SOUTH);
-
         addButton.addActionListener(e -> showAddItemDialog());
         deleteButton.addActionListener(e -> deleteSelectedItem());
         updateButton.addActionListener(e->showUpdateItemDialog());
-
+        }
         loadItems();
     }
 
@@ -76,7 +78,6 @@ public class ItemsPanel extends JPanel {
     }
 
     private void showAddItemDialog() {
-        JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         JTextField qrField = new JTextField();
         JTextField manufacturerField = new JTextField();
@@ -86,8 +87,6 @@ public class ItemsPanel extends JPanel {
         JTextField priceField = new JTextField();
 
         JPanel panel = new JPanel(new GridLayout(0, 1));
-        panel.add(new JLabel("Item ID:"));
-        panel.add(idField);
         panel.add(new JLabel("Item Name:"));
         panel.add(nameField);
         panel.add(new JLabel("Item QR:"));
@@ -108,7 +107,6 @@ public class ItemsPanel extends JPanel {
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                int itemId = Integer.parseInt(idField.getText());
                 String itemName = nameField.getText().trim();
                 String itemQr = qrField.getText().trim();
                 String manufacturer = manufacturerField.getText().trim();
@@ -118,17 +116,16 @@ public class ItemsPanel extends JPanel {
                 double unitPrice = Double.parseDouble(priceField.getText());
 
                 Connection db = InventoryDB.getConnection();
-                String insertItem = "INSERT INTO Item (item_id, item_name, item_qr, manufacturer, category, stock_quantity, min_stock_level, unit_price) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                String insertItem = "INSERT INTO Item (item_name, item_qr, manufacturer, category, stock_quantity, min_stock_level, unit_price) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement stmt = db.prepareStatement(insertItem);
-                stmt.setInt(1, itemId);
-                stmt.setString(2, itemName);
-                stmt.setString(3, itemQr);
-                stmt.setString(4, manufacturer);
-                stmt.setString(5, category);
-                stmt.setInt(6, stockQty);
-                stmt.setInt(7, minStock);
-                stmt.setDouble(8, unitPrice);
+                stmt.setString(1, itemName);
+                stmt.setString(2, itemQr);
+                stmt.setString(3, manufacturer);
+                stmt.setString(4, category);
+                stmt.setInt(5, stockQty);
+                stmt.setInt(6, minStock);
+                stmt.setDouble(7, unitPrice);
                 stmt.executeUpdate();
                 stmt.close();
 

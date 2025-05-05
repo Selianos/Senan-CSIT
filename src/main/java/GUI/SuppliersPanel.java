@@ -56,7 +56,7 @@ public class SuppliersPanel extends JPanel {
             Connection db = InventoryDB.getConnection();
             String query = "SELECT s.supplier_id, s.supplier_name, sc.contact_info " +
                     "FROM Supplier s " +
-                    "JOIN Supplier_contact_info sc ON s.supplier_id = sc.supplier_id";
+                    "left JOIN Supplier_contact_info sc ON s.supplier_id = sc.supplier_id";
             PreparedStatement st = db.prepareStatement(query);
             ResultSet rs = st.executeQuery();
 
@@ -215,6 +215,5 @@ public class SuppliersPanel extends JPanel {
             }
         }
     }
-
 }
 

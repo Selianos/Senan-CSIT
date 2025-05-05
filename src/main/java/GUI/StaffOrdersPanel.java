@@ -9,6 +9,15 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
+import javax.imageio.ImageIO ;
+import java.awt.image.BufferedImage ;
+import java.io.ByteArrayOutputStream ;
+import java.io.File;
+import java.io.FileOutputStream ;
+import java.io.IOException ;
+import javax.swing.filechooser.FileNameExtensionFilter ;
+
+
 
 public class StaffOrdersPanel extends JPanel {
     private JTable orderTable;
@@ -255,10 +264,20 @@ public class StaffOrdersPanel extends JPanel {
             JTable itemsTable = new JTable(data, columnNames);
             JScrollPane scrollPane = new JScrollPane(itemsTable);
             
+            
+            JButton printButton = new JButton("Print to Image");
+            printButton.addActionListener(e -> {
+                saveOrderDetailsAsImage(detailPanel, orderId);
+            });
+            
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            buttonPanel.add(printButton);
+            
             // Combine panels
             detailPanel.add(headerPanel, BorderLayout.NORTH);
             detailPanel.add(scrollPane, BorderLayout.CENTER);
-            
+            detailPanel.add(buttonPanel, BorderLayout.SOUTH);
+    
             // Show dialog
             JOptionPane.showMessageDialog(this, detailPanel, 
                     "Order Details", JOptionPane.PLAIN_MESSAGE);
@@ -273,5 +292,61 @@ public class StaffOrdersPanel extends JPanel {
         e.printStackTrace();
         JOptionPane.showMessageDialog(this, "Failed to load order details.");
     }
+        
 }
+   
+   private void saveOrderDetailsAsImage(JPanel detailsPanel, int orderId) {
+
+    int width = detailsPanel.getWidth();
+    int height = detailsPanel.getHeight();
+    
+    if (width <= 0) width = 800;
+    if (height <= 0) height = 600;
+    
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    Graphics2D g2d = image.createGraphics();
+    
+    g2d.setColor(Color.WHITE);
+    g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+    
+    detailsPanel.paint(g2d);
+    g2d.dispose();
+    
+    // Get file path from user
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setDialogTitle("Save Order Details");
+    fileChooser.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
+    fileChooser.setSelectedFile(new File("Order_" + orderId + ".png"));
+    
+    if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        File file = fileChooser.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".png")) {
+            file = new File(file.getAbsolutePath() + ".png");
+        }
+        
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            byte[] bytes = baos.toByteArray();
+            
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(bytes);
+            }
+            
+            JOptionPane.showMessageDialog(detailsPanel, 
+                "Order details saved successfully to " + file.getName(), 
+                "Success", 
+                JOptionPane.INFORMATION_MESSAGE);
+                
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(detailsPanel, 
+                "Error saving image: " + ex.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+   
+}
+   
 }

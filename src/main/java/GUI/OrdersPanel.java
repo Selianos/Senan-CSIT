@@ -8,6 +8,14 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import models.Employee ;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 public class OrdersPanel extends JPanel {
     private JTable orderTable;
@@ -74,18 +82,18 @@ public class OrdersPanel extends JPanel {
             
             if (statusFilter.equals("All")) {
                 query = "SELECT o.order_id, o.order_date, " +
-                        "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                        "CONCAT(e.first_name, ' ', e.last_name) as Employee_name, " +
                         "o.total_price, o.status " +
                         "FROM orders o " +
-                        "JOIN employee e ON o.emp_id = e.emp_id " +
+                        "JOIN Employee e ON o.emp_id = e.emp_id " +
                         "ORDER BY o.order_date DESC";
                 st = db.prepareStatement(query);
             } else {
                 query = "SELECT o.order_id, o.order_date," +
-                        "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                        "CONCAT(e.first_name, ' ', e.last_name) as Employee_name, " +
                         "o.total_price, o.status " +
                         "FROM orders o " + 
-                        "JOIN employee e ON o.emp_id = e.emp_id " +
+                        "JOIN Employee e ON o.emp_id = e.emp_id " +
                         "WHERE o.status = ? " +
                         "ORDER BY o.order_date DESC";
                 st = db.prepareStatement(query);
@@ -223,13 +231,13 @@ public class OrdersPanel extends JPanel {
         JButton addItemButton = new JButton("Add Item");
         
         // Order date (default to current date)
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        JTextField dateField = new JTextField(dateFormat.format(new Date()));
+        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        //JTextField dateField = new JTextField(dateFormat.format(new Date()));
         
 
         // Add components to panel
-        panel.add(new JLabel("Date:"));
-        panel.add(dateField);
+        //panel.add(new JLabel("Date:"));
+       // panel.add(dateField);
         
         
         // Create main dialog panel
@@ -304,7 +312,7 @@ public class OrdersPanel extends JPanel {
             try {
                 // Parse input fields 
                 //String status = (String) statusCombo.getSelectedItem();
-                Date orderDate = dateFormat.parse(dateField.getText().trim());
+               // Date orderDate = dateFormat.parse(dateField.getText().trim());
                 
                 // Calculate total
                 double total = calculateTotal(itemsTable);
@@ -321,7 +329,7 @@ public class OrdersPanel extends JPanel {
                     String insertOrder = "INSERT INTO orders (emp_id, order_date, total_price, status) VALUES (?, ?, ?, ?)";
                     PreparedStatement stmt = db.prepareStatement(insertOrder, Statement.RETURN_GENERATED_KEYS);
                     stmt.setInt(1, employeeId);
-                    stmt.setDate(2, new java.sql.Date(orderDate.getTime()));
+                    stmt.setDate(2, new java.sql.Date(new Date().getTime()));
                     stmt.setDouble(3, total);
                     stmt.setString(4, "Pending");
                     stmt.executeUpdate(); 
@@ -603,11 +611,6 @@ public class OrdersPanel extends JPanel {
         return 0;
     }
     
-    
-    
-    
-    
-    
     private void deleteSelectedOrder() {
         int selectedRow = orderTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -736,9 +739,19 @@ public class OrdersPanel extends JPanel {
                 JTable itemsTable = new JTable(dtm);
                 JScrollPane scrollPane = new JScrollPane(itemsTable);
                 
+  
+                JButton printButton = new JButton("Print to Image");
+                printButton.addActionListener(e -> {
+                saveOrderDetailsAsImage(detailPanel, orderId);
+            });
+            
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            buttonPanel.add(printButton);
+                
                 // Add components to main panel
                 detailPanel.add(headerPanel, BorderLayout.NORTH);
                 detailPanel.add(scrollPane, BorderLayout.CENTER);
+                detailPanel.add(buttonPanel, BorderLayout.SOUTH);
                 
                 // Show dialog
                 JOptionPane.showMessageDialog(this, detailPanel, 
@@ -904,4 +917,55 @@ public class OrdersPanel extends JPanel {
             return display;
         }
     }
+    
+    private void saveOrderDetailsAsImage(JPanel detailsPanel, int orderId) {
+    int width = detailsPanel.getWidth();
+    int height = detailsPanel.getHeight();
+    
+    if (width <= 0) width = 800;
+    if (height <= 0) height = 600;
+    
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    Graphics2D g2d = image.createGraphics();
+    
+    g2d.setColor(Color.WHITE);
+    g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+    
+    detailsPanel.paint(g2d);
+    g2d.dispose();
+    
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setDialogTitle("Save Order Details");
+    fileChooser.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
+    fileChooser.setSelectedFile(new File("Order_" + orderId + ".png"));
+    
+    if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        File file = fileChooser.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".png")) {
+            file = new File(file.getAbsolutePath() + ".png");
+        }
+        
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            byte[] bytes = baos.toByteArray();
+            
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(bytes);
+            }
+            
+            JOptionPane.showMessageDialog(detailsPanel, 
+                "Order details saved successfully to " + file.getName(), 
+                "Success", 
+                JOptionPane.INFORMATION_MESSAGE);
+                
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(detailsPanel, 
+                "Error saving image: " + ex.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+}
 }
