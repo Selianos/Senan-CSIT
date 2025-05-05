@@ -190,7 +190,7 @@ public class OrdersPanel extends JPanel {
     
      
      private void updateInventoryForOrder(Connection db, int orderId, boolean isCompleted) throws SQLException {
-            String query = "SELECT item_id, quantity FROM order_items WHERE order_id = ?";
+            String query = "SELECT item_id, quantity FROM Order_items WHERE order_id = ?";
             PreparedStatement stmt = db.prepareStatement(query);
             stmt.setInt(1, orderId);
             ResultSet rs = stmt.executeQuery();
@@ -203,7 +203,7 @@ public class OrdersPanel extends JPanel {
                 int adjustmentFactor = isCompleted ? -1 : 1;
 
                 PreparedStatement updateStmt = db.prepareStatement(
-                        "UPDATE item SET stock_quantity = stock_quantity + ? WHERE item_id = ?");
+                        "UPDATE Item SET stock_quantity = stock_quantity + ? WHERE item_id = ?");
                 updateStmt.setInt(1, quantity * adjustmentFactor);
                 updateStmt.setInt(2, itemId);
                 updateStmt.executeUpdate();
@@ -542,7 +542,7 @@ public class OrdersPanel extends JPanel {
                         }
                         
                         // Insert order detail
-                        String insertDetail = "INSERT INTO order_items (order_id, item_id, quantity) VALUES (?, ?, ?)";
+                        String insertDetail = "INSERT INTO Order_items (order_id, item_id, quantity) VALUES (?, ?, ?)";
                         PreparedStatement detailStmt = db.prepareStatement(insertDetail);
                         detailStmt.setInt(1, orderId);
                         detailStmt.setInt(2, itemId);
@@ -594,7 +594,7 @@ public class OrdersPanel extends JPanel {
     
     
     private int getItemStock(Connection db, int itemId) throws SQLException {
-        String query = "SELECT stock_quantity FROM item WHERE item_id = ?";
+        String query = "SELECT stock_quantity FROM Item WHERE item_id = ?";
         PreparedStatement st = db.prepareStatement(query);
         st.setInt(1, itemId);
         ResultSet rs = st.executeQuery();
@@ -640,7 +640,7 @@ public class OrdersPanel extends JPanel {
                 // First delete order items
                 
                 PreparedStatement deleteItems = db.prepareStatement(
-                        "DELETE FROM order_items WHERE order_id = ?");
+                        "DELETE FROM Order_items WHERE order_id = ?");
                 deleteItems.setInt(1, orderId);
                 deleteItems.executeUpdate();
                 deleteItems.close();
@@ -682,10 +682,10 @@ public class OrdersPanel extends JPanel {
             
             // Fetch order header details
             String headerQuery = "SELECT o.order_id, o.order_date," +
-                    "CONCAT(e.first_name, ' ', e.last_name) as employee_name, " +
+                    "CONCAT(e.first_name, ' ', e.last_name) as Employee_name, " +
                     "o.total_price, o.status " +
                     "FROM orders o " +
-                    "JOIN employee e ON o.emp_id = e.emp_id " +
+                    "JOIN Employee e ON o.emp_id = e.emp_id " +
                     "WHERE o.order_id = ?";
             
             PreparedStatement headerStmt = db.prepareStatement(headerQuery);
@@ -711,8 +711,8 @@ public class OrdersPanel extends JPanel {
                 
                 // Order items
                 String itemsQuery = "SELECT i.item_name, oi.quantity, i.unit_price " +
-                        "FROM order_items oi " +
-                        "JOIN item i ON oi.item_id = i.item_id " +
+                        "FROM Order_items oi " +
+                        "JOIN Item i ON oi.item_id = i.item_id " +
                         "WHERE oi.order_id = ?";
                 
                 PreparedStatement itemsStmt = db.prepareStatement(itemsQuery);
@@ -777,7 +777,7 @@ public class OrdersPanel extends JPanel {
     private void loadSuppliers(JComboBox<ComboItem> combo) {
         try {
             Connection db = InventoryDB.getConnection();
-            String query = "SELECT supplier_id, supplier_name FROM supplier ORDER BY supplier_name";
+            String query = "SELECT supplier_id, supplier_name FROM Supplier ORDER BY supplier_name";
             PreparedStatement st = db.prepareStatement(query);
             ResultSet rs = st.executeQuery();
 
@@ -798,7 +798,7 @@ public class OrdersPanel extends JPanel {
     private void loadItems(JComboBox<ComboItem> combo) {
         try {
             Connection db = InventoryDB.getConnection();
-            String query = "SELECT item_id, item_name FROM item ORDER BY item_name";
+            String query = "SELECT item_id, item_name FROM Item ORDER BY item_name";
             PreparedStatement st = db.prepareStatement(query);
             ResultSet rs = st.executeQuery();
 
@@ -819,7 +819,7 @@ public class OrdersPanel extends JPanel {
     private double getItemPrice(int itemId) {
         try {
             Connection db = InventoryDB.getConnection();
-            String query = "SELECT unit_price FROM item WHERE item_id = ?";
+            String query = "SELECT unit_price FROM Item WHERE item_id = ?";
             PreparedStatement st = db.prepareStatement(query);
             st.setInt(1, itemId);
             ResultSet rs = st.executeQuery();
@@ -847,7 +847,7 @@ public class OrdersPanel extends JPanel {
             }
             
             Connection db = InventoryDB.getConnection();
-            String query = "SELECT item_id FROM item WHERE item_name = ?";
+            String query = "SELECT item_id FROM Item WHERE item_name = ?";
             PreparedStatement st = db.prepareStatement(query);
             st.setString(1, name);
             ResultSet rs = st.executeQuery();
@@ -886,7 +886,7 @@ public class OrdersPanel extends JPanel {
     
     
     private void updateInventory(Connection db, int itemId, int quantity) throws SQLException {
-        String query = "UPDATE item SET stock_quantity = stock_quantity + ? WHERE item_id = ?";
+        String query = "UPDATE Item SET stock_quantity = stock_quantity + ? WHERE item_id = ?";
         PreparedStatement st = db.prepareStatement(query);
         st.setInt(1, quantity);
         st.setInt(2, itemId);
